@@ -1,0 +1,318 @@
+package com.akaskaterdl.utils;
+
+import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.sql.DataSource;
+
+/**
+ * 数据库工具类
+ * @author Akaskaterdl
+ *
+ * 2016-5-31
+ */
+public class DBUtil {
+	
+	private static DataSource source = null;
+	
+	static {
+		try {
+			Context context = new InitialContext();
+			source = (DataSource)context.lookup("java:comp/env/jdbc/sc160302");
+		} catch (NamingException e) {
+			System.out.println("获取数据源失败！");
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * 获取连接
+	 * @author Akaskaterdl
+	 *
+	 * @return
+	 * 2016-5-31
+	 */
+	public static Connection getConnection(){
+		Connection conn = null;
+		try {
+			conn = source.getConnection();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println("数据库连接失败! ");
+		}
+		return conn;
+	}
+	
+	/**
+	 * 执行sql语句,包含insert, update, delete
+	 * @author Akaskaterdl
+	 *
+	 * @param sql			执行sql
+	 * @param params		sql参数的合集
+	 * @return
+	 * 2016-5-31
+	 */
+	public static int executeUpdate(String sql, Object[] params){
+		Connection conn = getConnection();
+		PreparedStatement ps = null;
+		int count = 0;
+		try {
+			ps = conn.prepareStatement(sql);
+			if(params != null){
+				for(int i=0; i<params.length; i++){
+					ps.setObject(i + 1, params[i]);
+				}
+			}
+			count = ps.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println("执行SQL语句异常! ");
+		}finally{
+			close(conn, ps, null);
+		}
+		return count;
+	}
+	
+	/**
+	 * 查询结果
+	 * @author Akaskaterdl
+	 *
+	 * @param sql
+	 * @param params
+	 * @return
+	 * 2016-5-31
+	 */
+	public static List<Object[]> executeQuery(String sql, Object[] params){
+		Connection conn = getConnection();
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		List<Object[]>  rsList = new ArrayList<Object[]>(); 
+		try {
+			ps = conn.prepareStatement(sql);
+			if(params != null){
+				for(int i=0; i<params.length; i++){
+					ps.setObject(i + 1, params[i]);
+				}
+			}
+			rs = ps.executeQuery();
+			//获取结果集的列数
+			int count = rs.getMetaData().getColumnCount();
+			while(rs.next()){
+				Object[] objs = new Object[count];
+				for(int i=0; i<objs.length; i++){
+					objs[i] = rs.getObject(i + 1);
+				}
+				rsList.add(objs);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println("执行SQL语句异常! ");
+		}finally{
+			close(conn, ps, rs);
+		}
+		return rsList;
+	}
+	
+	/**
+	 * 查询结果，以Map的形式
+	 * @author Akaskaterdl
+	 *
+	 * @param sql     查询的sql
+	 * @param params  查询语句中的参数
+	 * @return
+	 * 2016-6-1
+	 */
+	public static List<Map<String, Object>> executeQueryFormap(String sql, Object[] params){
+		Connection conn = getConnection();
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		List<Map<String, Object>> rsList = new ArrayList<Map<String, Object>>();
+		try {
+			ps = conn.prepareStatement(sql);
+				if(params != null) {
+					for(int i=0; i<params.length; i++) {
+					ps.setObject(i + 1, params[i]);
+				}
+			}
+			rs = ps.executeQuery();
+			//获取结果集的列数
+			ResultSetMetaData rmd = rs.getMetaData();
+			int count = rmd.getColumnCount();
+			while(rs.next()) {
+				Map<String, Object> values = new HashMap<String, Object>();
+				for(int i=1; i<=count; i++) {
+					String key = rmd.getColumnName(i);
+					Object value = rs.getObject(i);
+					values.put(key, value);
+				}
+				rsList.add(values);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println("执行sql语句异常！");
+		}finally {
+			close(conn, ps, rs);
+		}
+		return rsList;
+	}
+	
+	/**
+	 * 分页查询
+	 * @author Akaskaterdl
+	 *
+	 * @param sql           查询sql
+	 * @param params        条件参数
+	 * @param startIndex    搜索起始位置
+	 * @param endIndex      搜索结束位置
+	 * @return
+	 * 2016-6-20
+	 */
+	public static List<Object[]> executeQueryByPage(String sql, Object[] params, int startIndex, int endIndex) {
+		Connection conn = getConnection();
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		List<Object[]> rsList = new ArrayList<Object[]>();
+		//获取分页sql
+		sql = getPageSql(sql);
+		try {
+			ps = conn.prepareStatement(sql);
+			if(params != null) {
+				for(int i=0; i<params.length; i++) {
+					ps.setObject(i + 1, params[i]);
+				}
+			}
+			//分页起始位置
+			ps.setInt(params.length + 1, startIndex);
+			//分页结束位置
+			ps.setInt(params.length + 2, endIndex);
+			rs = ps.executeQuery();
+			//获取结果集的列数
+			int count = rs.getMetaData().getColumnCount();
+			while(rs.next()) {
+				Object[] objs = new Object[count];
+				for(int i=0; i<objs.length; i++) {
+					objs[i] = rs.getObject(i + 1);
+				}
+				rsList.add(objs);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println("执行sql语句异常！");
+		}finally {
+			close(conn, ps, rs);
+		}
+		return rsList;
+	}
+	
+	/**
+	 * 查询统计
+	 * @author Akaskaterdl
+	 *
+	 * @param sql         执行sql
+	 * @param params      条件参数
+	 * @return
+	 * 2016-6-20
+	 */
+	public static BigDecimal executeCount(String sql, Object[] params) {
+		BigDecimal big = null;
+		Connection conn = getConnection();
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		//获取分页sql
+		sql = getCountSql(sql);
+		try {
+			ps = conn.prepareStatement(sql);
+			if(params != null) {
+				for(int i=0; i<params.length; i++) {
+					ps.setObject(i + 1, params[i]);
+				}
+			}
+			rs = ps.executeQuery();
+			//获取结果集
+			while(rs.next()) {
+				big = rs.getBigDecimal(1);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println("执行sql语句异常！");
+		}finally {
+			close(conn, ps, rs);
+		}
+		return big;
+	}
+	
+	/**
+	 * 获取分页sql
+	 * @author Akaskaterdl
+	 *
+	 * @param sql
+	 * @return
+	 * 2016-6-20
+	 */
+	private static String getPageSql(String sql) {
+		StringBuffer sb = new StringBuffer("select * from (select a.*, rownum rn from (");
+		sb.append(sql);
+		sb.append(")a ) where rn between ? and ?");
+		return sb.toString();
+	}
+	
+	/**
+	 * 获取统计语句
+	 * @author Akaskaterdl
+	 *
+	 * @param sql
+	 * @return
+	 * 2016-6-20
+	 */
+	private static String getCountSql(String sql) {
+		int fromIndex = sql.indexOf("from");
+		int orderIndex = sql.indexOf("order by");
+		//判断是否有order by语句
+		if(orderIndex != -1) {
+			sql = sql.substring(fromIndex, orderIndex);
+		}else {
+			sql = sql.substring(fromIndex);
+		}
+		StringBuffer sb = new StringBuffer("select count(*) ");
+		sb.append(sql);
+		return sb.toString();
+	}
+	
+	/**
+	 * 关闭
+	 * @author Akaskaterdl
+	 *
+	 * @param conn
+	 * @param sta
+	 * @param rs
+	 * 2016-5-31
+	 */
+	public static void close(Connection conn, Statement sta, ResultSet rs){
+		try{
+			if(rs != null){
+				rs.close();
+			}
+			if(sta != null){
+				sta.close();
+			}
+			if(conn != null){
+				conn.close();
+			}
+		}catch(SQLException e){
+			System.out.println("释放资源异常! ");
+		}
+	} 
+	
+}
