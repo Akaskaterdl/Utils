@@ -1,0 +1,286 @@
+package com.akaskaterdl.utils;
+
+import java.util.Arrays;
+
+/**
+ * 字符串工具类
+ * @author Akaskaterdl
+ *
+ * 2016-5-17
+ */
+public class StringUtil {
+
+	/**
+	 * 字符转化成大写
+	 * @author Akaskaterdl
+	 *
+	 * 2016-5-17
+	 */
+	public static char toUpperCase(char ch) {
+		int strCode = (int)ch;
+		if(strCode >= 97 && strCode <= 122) {
+			strCode -= 32;
+		}
+		return (char)strCode;
+	}
+	
+	/**
+	 * 字符串转化成大写
+	 * @author Akaskaterdl
+	 *
+	 * 2016-5-17
+	 */
+	public static String toUpperCase(String str) {
+		//toCharArray把字符串转化成字符
+		char[] chs = str.toCharArray();
+		for(int i=0; i<chs.length; i++) {
+			chs[i] = toUpperCase(chs[i]);
+		}
+		//字符数组转化成字符串
+		str = new String(chs);
+		return str;
+	}
+	
+	
+	/**
+	 * 字符转化成小写
+	 * @author Akaskaterdl
+	 *
+	 * 2016-5-17
+	 */
+	public static char toLowerCase(char ch) {
+		int strCode = (int)ch;
+		if(strCode >= 65 && strCode <= 90) {
+			strCode += 32;
+		}
+		return (char)strCode;
+	}
+	
+	/**
+	 * 字符串转化成小写
+	 * @author Akaskaterdl
+	 *
+	 * 2016-5-17
+	 */
+	public static String toLowerCase(String str) {
+		//toCharArray把字符串转化成字符
+		char[] chs = str.toCharArray();
+		for(int i=0; i<chs.length; i++) {
+			chs[i] = toLowerCase(chs[i]);
+		}
+		//字符数组转化成字符串
+		str = new String(chs);
+		return str;
+	}
+
+	/**
+	 * 统计字符在字符串中出现的次数与位置
+	 * @author Akaskaterdl
+	 *
+	 * 2016-5-18
+	 */
+	public static int[] getIndex(String str, char c){
+		char[] chs = str.toCharArray();
+		StringBuffer sb = new StringBuffer();
+		for(int i=0; i<chs.length; i++){
+			if(chs[i] == c){
+				sb.append(i);
+				sb.append(",");
+			}
+		}
+		
+		String[] strs= sb.toString().split(",");
+		int[] result = new int[strs.length];
+		for(int i=0; i<result.length; i++){
+			result[i] = Integer.parseInt(strs[i]);
+		}
+		return result;
+	}
+	
+	/**
+	 * 给字符串内容排序
+	 * @author Akaskaterdl
+	 *
+	 * 2016-5-18
+	 */
+	public static String sort(String str){
+		char[] chs = str.toCharArray();
+		Arrays.sort(chs);
+		return String.valueOf(chs);
+	}
+	
+	/**
+	 * 字符串逆序 
+	 * @author Akaskaterdl
+	 *
+	 * 2016-5-18
+	 */
+	public static String reversal(String str){
+		char[] chs = str.toCharArray();
+		char[] result = new char[chs.length];
+		for(int i=chs.length-1; i>=0; i--){
+			result[chs.length -1 -i] = chs[i];
+		}
+		return String.valueOf(result);
+	}
+	
+	/**
+	 * 提取字符串中的数字
+	 * @author Akaskaterdl
+	 *
+	 * 2016-5-18
+	 */
+	public static String extractNumber(String str){
+		char[] chs = str.toCharArray();
+		StringBuffer sbNum = new StringBuffer();
+		for(int i=0; i<chs.length; i++){
+			if(chs[i] >='0' && chs[i] <= '9'){
+				sbNum.append(chs[i]);
+			}
+		}
+		return sbNum.toString();
+	}
+	
+	/**
+	 * 提取字符串中的字母，不区分大小写
+	 * @author Akaskaterdl
+	 *
+	 * @param str
+	 * @return
+	 * 2016-5-18
+	 */
+	public static String extractLetter(String str) {
+		char[] chs = str.toCharArray();
+		StringBuffer sbStr = new StringBuffer();
+		for(int i=0; i<chs.length; i++) {
+			if((chs[i] >= 'a' && chs[i] <= 'z') || 
+			   (chs[i] >= 'A' && chs[i] <= 'Z')) {
+				sbStr.append(chs[i]);
+			}
+		}
+		return sbStr.toString();
+	}
+	
+	/**
+	 * 提取字符串中的数字
+	 * @author Akaskaterdl
+	 *
+	 * @param str
+	 * @return
+	 * 2016-5-18
+	 */
+	public static String extractNumber(String str) {
+		char[] chs = str.toCharArray();
+		StringBuffer sbNum = new StringBuffer();
+		for(int i=0; i<chs.length; i++) {
+			if(chs[i] >= '0' && chs[i] <= '9') {
+				sbNum.append(chs[i]);
+			}
+		}
+		return sbNum.toString();
+	}
+	
+	/**
+	 * 判断字符串是否是数字字符串 	boolean
+	 * @author Akaskaterdl
+	 *
+	 * 2016-5-18
+	 */
+	public static boolean checkNum(String str){
+		try{
+			Integer.parseInt(str);
+		}catch(Exception e){
+			return false;
+		}
+		return true;
+	}
+	
+	/**
+	 * 判断字符是否是数字字符 	boolean
+	 * @author Akaskaterdl
+	 *
+	 * 2016-5-18
+	 */
+	public static boolean checkNum(char ch){
+		/*if(ch >= '0' && ch <+ '9'){
+			return true;
+		}else{
+			return fasle
+		}*/
+		return Character.isDigit(ch);
+	}
+	
+	/**
+	 * @author Akaskaterdl
+	 *获取随机号码
+	 * @param args
+	 * 2016-5-19
+	 */
+	public static String getRomdan(int length){
+		char[] chs = {'a','b','c','d','e','f','g','h','i','g','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',
+				          'A','B','C','D','E','F','G','H','I','G','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
+				          '0','1','2','3','4','5','6','7','8','9'};
+		char[] result = new char[length];
+		//StringBuffer sb = new StringBuffer();
+		for(int i=0; i<length; i++){
+			int index = (int)(Math.random() * 62);
+			result[i] = chs[index];
+			//sb.append(chs[index]);
+		}
+		//return sb.toString();
+		return new String(result);
+	}
+	
+	/**
+	 * 验证邮箱地址
+	 * @author Akaskaterdl
+	 *
+	 * 2016-5-17
+	 */
+	public static boolean checkEmail(String email) {
+		if(email == null || "".equals(email)) {
+			return false;
+		}
+		/*
+		//搜索指定的字符在字符串中的索引位置
+		int index = email.indexOf('@');
+		//获取字符串的长度
+		int length = email.length();
+		if(index <= 0 || index == length - 1) {
+			return false;
+		}
+		int count = 0;
+		for(int i=0; i<length; i++) {
+			//根据索引位查找字符串中指定位置的字符
+			if(email.charAt(i) == '@') {
+				count++;
+			}
+		}
+		if(count > 1) {
+			return false;
+		}
+		*/
+		boolean temp = email.matches("\\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*");
+		return temp;
+	}
+	
+	public static void main(String[] args) {
+		System.out.println(checkEmail("455951160@qq.com"));
+	}
+	
+	/**
+	 * null转空串
+	 * @author Akaskaterdl
+	 *
+	 * @param str
+	 * @return
+	 * 2016-6-15
+	 */
+	public static String nullToSpace(String str){
+		if(str == null ){
+			str = "";
+		}
+		return str;
+	}
+	
+}
