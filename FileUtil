@@ -1,0 +1,290 @@
+package com.akaskaterdl.utils;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * 文件工具类
+ * @author Akaskaterdl
+ *
+ * 2016-7-13
+ */
+public class FileUtil {
+	
+	private final static String ENCODING = "UTF-8";
+
+	/**
+	 * 获取指定目录下的所有文件，包括子目录
+	 * @author Akaskaterdl
+	 *
+	 * @param path
+	 * @return
+	 * 2016-7-13
+	 */
+	public static List<File> getFiles(String path) {
+		File file = new File(path);
+		List<File> fileList = new ArrayList<File>();
+		fileList(file, fileList);
+		return fileList;
+	}
+
+	/**
+	 * 根据指定的后缀名，获取指定目录下的所有文件，包括子目录
+	 * @author Akaskaterdl
+	 *
+	 * @param path
+	 * @param suffix
+	 * @return
+	 * 2016-7-13
+	 */
+	public static List<File> getFiles(String path, String suffix) {
+		File file = new File(path);
+		List<File> fileList = new ArrayList<File>();
+		fileList(file, fileList, suffix);
+		return fileList;
+	}
+	
+	
+	/**
+	 * 获取指定目录下的所有文件，包括子目录
+	 * @author Akaskaterdl
+	 *
+	 * @param file
+	 * @param files
+	 * 2016-7-13
+	 */
+	private static void fileList(File file, List<File> files) {
+		//判断是不是目录
+		if(file.isDirectory()) {
+			File[] fileList = file.listFiles();
+			if(fileList != null) {
+				for(File f : fileList) {
+					fileList(f, files);
+				}
+			}else {
+				files.add(file);
+			}
+		}
+		
+	}
+	
+	/**
+	 * 根据指定的后缀名，获取指定目录下的所有文件，包括子目录
+	 * @author Akaskaterdl
+	 *
+	 * @param file
+	 * @param files
+	 * 2016-7-13
+	 */
+	private static void fileList(File file, List<File> files, String suffix) {
+		//判断是不是目录
+		if(file.isDirectory()) {
+			File[] fileList = file.listFiles();
+			if(fileList != null) {
+				for(File f : fileList) {
+					fileList(f, files, suffix);
+				}
+			}else {
+				if(file.getName().endsWith(suffix)) {
+					files.add(file);
+				}
+			}
+		}
+	}
+	
+	/**
+	 * 复制
+	 * @author Akaskaterdl
+	 *
+	 * @param srcPath
+	 * @param targetPath
+	 * 2016-7-13
+	 */
+	public static void copy(String srcPath, String targetPath) {
+		File srcFile = new File(srcPath);
+		if(!srcFile.exists()) {
+			return;
+		}
+		File targetFile = new File(targetPath + srcFile.getName());
+		copyFolder(srcFile, targetFile);
+	}
+	
+	/**
+	 * 复制文件
+	 * @author Akaskaterdl
+	 *
+	 * @param srcFile
+	 * @param targetFile
+	 * 2016-7-13
+	 */
+	public static void copyFile(File srcFile, File targetFile) {
+		//源文件
+		if(!srcFile.exists()){
+			return;
+		}
+		//目标文件
+		if(targetFile.exists()) {
+			targetFile.delete();
+		}
+		
+		InputStream in = null;
+		OutputStream out = null;
+		try{
+			in = new FileInputStream(srcFile);
+			out = new FileOutputStream(targetFile);
+			byte[] data = new byte[1024];
+			int length;
+			while((length = in.read(data)) != -1) {
+				out.write(data, 0, length);
+			}
+		}catch(IOException e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				out.close();
+				in.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	/**
+	 * 复制文件夹
+	 * @author Akaskaterdl
+	 *
+	 * @param srcFile
+	 * @param targetFile
+	 * 2016-7-13
+	 */
+	private static void copyFolder(File srcFile, File targetFile) {
+		if(!srcFile.isDirectory()) {
+			if(!targetFile.exists()) {
+				targetFile.mkdir();
+			}
+			File[] files = srcFile.listFiles();
+			for(File file : files) {
+				File targetChildFile = new File(targetFile, file.getName());
+				copyFolder(file, targetChildFile);
+			}
+		}else {
+			copyFile(srcFile, targetFile);
+		}
+	}
+	
+	/**
+	 * 写入文本文件
+	 * @author Akaskaterdl
+	 *
+	 * @param filePath
+	 * @param content
+	 * 2016-7-14
+	 */
+	public static void writeTextFile(String filePath, String content, String encoding) {
+		File file = new File(filePath);
+		OutputStream out = null;
+		try {
+			out = new FileOutputStream(file);
+			out.write(content.getBytes(encoding));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				out.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	/**
+	 * 写入文本文件
+	 * @author Akaskaterdl
+	 *
+	 * @param filePath
+	 * @param content
+	 * 2016-7-14
+	 */
+	public static void writeTextFile(String filePath, String content) {
+		writeTextFile(filePath, content, ENCODING);
+	}
+	
+	/**
+	 * 读取文本文件
+	 * @author Akaskaterdl
+	 *
+	 * @param filePath
+	 * @param content
+	 * @param encoding
+	 * 2016-7-14
+	 * @return 
+	 */
+	public static String readTextFile(String filePath, String encoding) {
+		File file = new File(filePath);
+		if(!file.exists()) {
+			return null;
+		}
+		InputStream in = null;
+		try {
+			StringBuffer sb = new StringBuffer();
+			in = new FileInputStream(file);
+			byte[] data = new byte[1024];
+			int length;
+			while((length = in.read(data)) != -1) {
+				sb.append(new String(data, 0, length, encoding));
+			}
+			return sb.toString();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				in.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * 读取文本文件
+	 * @author Akaskaterdl
+	 *
+	 * @param filePath
+	 * @return
+	 * 2016-7-14
+	 */
+	public static String readTextFile(String filePath) {
+		return readTextFile(filePath, ENCODING);
+	}
+	
+	/**
+	 * 获取文件后缀名
+	 * @author Akaskaterdl
+	 *
+	 * @param file
+	 * @param dot			true为含.，false为不含.
+	 * @return
+	 * 2016-7-22
+	 */
+	public static String getSuffix(File file, boolean dot) {
+		String fileNmae = file.getName();
+		int index = fileNmae.lastIndexOf(".");
+		if(dot) {
+			return fileNmae.substring(index);
+		}
+		return fileNmae.substring(index + 1);
+	}
+	
+}
