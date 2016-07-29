@@ -1,0 +1,76 @@
+package com.akaskaterdl.utils;
+
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.service.ServiceRegistry;
+
+/**
+ * Hibernate工具类
+ * @author Akaskaterdl
+ *
+ * 2016-7-26
+ */
+public class HibernateUtil {
+	
+	private static SessionFactory sf = null;
+	
+	private static ThreadLocal<Session> tl = new ThreadLocal<Session>();
+
+	private final static String CONFIGFILE = "hibernate.cfg.xml";
+	
+	static{
+		
+		//1.创建Configuration对象，用于读取配置文件
+		Configuration config = new Configuration();
+		config.configure(CONFIGFILE);
+		
+		//2.创建sessionFactory，一个sessionFactory对应一个数据库
+		//sessionFactory只能创建一次
+		StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder();
+		ServiceRegistry sr = ssrb.applySettings(config.getProperties()).build();
+		sf = config.buildSessionFactory(sr);
+	}
+	
+	/**
+	 * 获取SessionFactory
+	 * @author Akaskaterdl
+	 *
+	 * @return
+	 * 2016-7-26
+	 */
+	public static SessionFactory getSessionFactory() {
+		return sf;
+	}
+	
+	/**
+	 * 获取session
+	 * @author Akaskaterdl
+	 *
+	 * @return
+	 * 2016-7-26
+	 */
+	public static Session getSession() {
+		Session session = tl.get();
+		if(session == null) {
+			session = sf.openSession();
+			tl.set(session);
+		}
+		return session;
+	}
+	
+	/**
+	 * 关闭session
+	 * @author Akaskaterdl
+	 *
+	 * 2016-7-26
+	 */
+	public static void close() {
+		Session session = tl.get();
+		if(session != null) {
+			session.close();
+			tl.remove();
+		}
+	}
+}
